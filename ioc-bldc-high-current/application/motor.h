@@ -32,16 +32,22 @@ private:
 	Adc_dma adc_buffer = {0};
 
 	// at startup, the first sample is to calibrate 0A point
-	int16_t current_a_zero_offset;
-	int16_t current_b_zero_offset;
-	int16_t current_c_zero_offset;
+	int16_t current_a_zero_offset = 0;
+	int16_t current_b_zero_offset = 0;
+	int16_t current_c_zero_offset = 0;
+
+	// runtime control variables
+	float power = 0.0f;
+	float angle = 0.0f;
+	float angle_increment = 0.0f;
 
 	// calculated phase currents
-	float current_a;
-	float current_b;
-	float current_c;
-	float supply_voltage;
+	float current_a = 0.0f;
+	float current_b = 0.0f;
+	float current_c = 0.0f;
+	float supply_voltage = 0.0f;
 	inline void assign_pwm(float power, float angle);
+	inline void assign_stop();
 	inline void setup_timer();
 	inline void setup_adc();
 	inline float calculate_supply_voltage(uint16_t sample);

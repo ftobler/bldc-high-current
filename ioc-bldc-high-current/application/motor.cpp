@@ -7,6 +7,7 @@
 
 #include "string.h"  // for memset
 #include "motor.h"
+#include "sine_table.h"
 
 
 void Motor::setup_timer() {
@@ -131,18 +132,68 @@ void Motor::adc_calculate() {
 
 void Motor::timer_isr() {
 	adc_calculate();
+
+	angle += angle_increment;
+	if (angle > TWO_PI) {
+		angle -= PI;
+	}
+	if (angle < -TWO_PI) {
+		angle += PI;
+	}
+
+	if (supply_voltage > 10.0f) {
+		assign_pwm(power, angle);
+	} else {
+		assign_stop();
+	}
+
 }
 
 
-void Motor::assign_pwm(float power, float angle) {
+inline void Motor::assign_pwm(float power, float angle) {
+    constexpr float ONE_THIRD_PI = TWO_PI / 3.0f;
 
-	// guard overflow
+    // enforce limits immediately
     if (power < 0.0f) power = 0.0f;
     if (power > 1.0f) power = 1.0f;
 
-    // write CCR registers directly for low-latency update
-    timer.Instance->CCR1 = 0;  // phase A
-    timer.Instance->CCR2 = 0;  // phase B
-    timer.Instance->CCR3 = 0;  // phase C
+    // precompute duty scaling
+    constexpr uint32_t min_ticks = 150;
+    constexpr uint32_t max_ticks = timer_arr - min_ticks;
+    constexpr float half_period = static_cast<float>(timer_arr) / 2.0f;
+
+    // get normalized sine phase values
+    const float sa = fast_sin(angle);
+    const float sb = fast_sin(angle - ONE_THIRD_PI);
+    const float sc = fast_sin(angle + ONE_THIRD_PI);
+
+    // convert to duty ticks (center-aligned, bipolar to unipolar mapping)
+    auto scale_to_ticks = [&](float x) -> uint32_t {
+        // normalized sine -1..1 mapped to 0..timer_arr
+        float duty = (x * power * half_period) + half_period;
+        // enforce clamp limits
+        if (duty < static_cast<float>(min_ticks))
+            duty = static_cast<float>(min_ticks);
+        else if (duty > static_cast<float>(max_ticks))
+            duty = static_cast<float>(max_ticks);
+        return static_cast<uint32_t>(duty);
+    };
+
+    // compute phase PWM compare values
+    const uint32_t ccr_a = scale_to_ticks(sa);
+    const uint32_t ccr_b = scale_to_ticks(sb);
+    const uint32_t ccr_c = scale_to_ticks(sc);
+
+    // write CCR registers directly (low-latency)
+    timer.Instance->CCR1 = ccr_a;
+    timer.Instance->CCR2 = ccr_b;
+    timer.Instance->CCR3 = ccr_c;
+}
+
+
+inline void Motor::assign_stop() {
+    timer.Instance->CCR1 = 0;
+    timer.Instance->CCR2 = 0;
+    timer.Instance->CCR3 = 0;
 }
 
