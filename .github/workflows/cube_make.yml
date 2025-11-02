@@ -23,4 +23,5 @@ jobs:
 
     - name: Build using new Makefile
       run: |
+        cd stm-bldc-high-current
         make
