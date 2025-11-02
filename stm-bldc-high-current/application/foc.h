@@ -19,10 +19,10 @@ class Foc {
 private:
 
 	// --- control gains (tune later) ---
-	float kp_d = 0.0005f;
-	float ki_d = 0.00002f;
-	float kp_q = 0.0005f;
-	float ki_q = 0.00002f;
+	float kp_d = 0.005f;
+	float ki_d = 0.0005f;
+	float kp_q = 0.005f;
+	float ki_q = 0.0005f;
 
 	// --- PI integrators ---
 	float integrator_d = 0.0f;
@@ -33,8 +33,6 @@ private:
 	float target_iq = 0.0f;
 
 	// --- results (for debugging / visibility) ---
-	float i_alpha = 0.0f;
-	float i_beta  = 0.0f;
 	float id      = 0.0f;
 	float iq      = 0.0f;
 
@@ -43,5 +41,6 @@ private:
 	inline void park_transform(float alpha, float beta, float angle, float& d, float& q);
 	inline void inv_park_transform(float d, float q, float angle, float& alpha, float& beta);
 public:
+	void start();
 	Vector3 update(float current_a, float current_b, float current_c, float angle);
 };

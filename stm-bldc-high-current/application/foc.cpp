@@ -15,7 +15,7 @@
 void Foc::clarke_transform(float a, float b, float c, float& alpha, float& beta) {
 	alpha = a;
 	constexpr float one_over_sqrt_three = 0.5773502691896258f;  // 1/sqrt(3) (from python)
-	beta = (a + 2.0f * b) * one_over_sqrt_three;
+	beta = one_over_sqrt_three * (b - c);
 }
 
 
@@ -52,8 +52,15 @@ void Foc::inv_park_transform(float d, float q, float angle, float& alpha, float&
 }
 
 
+void Foc::start() {
+	integrator_d = 0.0f;
+	integrator_q = 0.0f;
+}
+
+
 Vector3 Foc::update(float current_a, float current_b, float current_c, float angle) {
 	// Step 1: Clarke transform
+	float i_alpha, i_beta;
 	clarke_transform(current_a, current_b, current_c, i_alpha, i_beta);
 
 	// Step 2: Park transform

@@ -266,6 +266,9 @@ inline void Motor::run_power_control() {
 
 
 inline void Motor::run_current_control() {
+if (old_state != state) {
+		foc.start();
+	}
 	constexpr float gain = pole_pairs * TWO_PI / 4096.0;
 	float current_angle = (encoder_value - encoder_offset) * gain + PI;
 	Vector3 v = foc.update(-current_a, -current_b, -current_c, current_angle);
