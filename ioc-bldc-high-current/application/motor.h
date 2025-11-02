@@ -37,6 +37,7 @@ private:
 	int16_t current_c_zero_offset = 0;
 
 	// runtime control variables
+	bool pwm_on = false;
 	float power = 0.0f;
 	float angle = 0.0f;
 	float angle_increment = 0.0f;
