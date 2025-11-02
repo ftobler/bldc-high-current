@@ -91,15 +91,4 @@ Vector3 Foc::update(float current_a, float current_b, float current_c, float ang
 	inv_clarke_transform(v_alpha, v_beta, v.a, v.b, v.c);
 
 	return v;
-
-//	// Step 6: find max magnitude for normalization
-//	float vmax = fabsf(v_a);
-//	if (fabsf(v_b) > vmax) vmax = fabsf(v_b);
-//	if (fabsf(v_c) > vmax) vmax = fabsf(v_c);
-//	if (vmax < 1e-6f) vmax = 1.0f;
-//
-//	// normalize and send to PWM
-//	float scale = 1.0f / vmax;
-////	assign_pwm(v_a * scale * 0.5f, 0.0f);  // simplified, better if you map alpha/beta to phase timing
-
 }
