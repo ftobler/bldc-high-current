@@ -266,15 +266,23 @@ inline void Motor::run_power_control() {
 
 
 inline void Motor::run_current_control() {
-if (old_state != state) {
+	if (old_state != state) {
 		foc.start();
 	}
 	constexpr float gain = pole_pairs * TWO_PI / 4096.0;
 	float current_angle = (encoder_value - encoder_offset) * gain + PI;
 	Vector3 v = foc.update(-current_a, -current_b, -current_c, current_angle);
 
-	constexpr float max = 0.3f;
-	if (v.a > max || v.b > max || v.c > max || v.a < -max || v.b < -max || v.c < -max) {
+	auto inbound = [&](float x, float max) -> bool {
+		return x > max || x < -max;
+	};
+	auto inbound3 = [&](float a, float b, float c, float max) -> bool {
+		return inbound(a, max) || inbound(b, max) || inbound(c, max);
+	};
+
+	constexpr float max_current = 50.0f;
+	constexpr float max_pwm = 0.9f;
+	if (inbound3(v.a, v.b, v.c, max_pwm) || inbound3(current_a, current_b, current_c, max_current)) {
 		// emergency stop
 		assign_stop();
 		state = Mode::off;
