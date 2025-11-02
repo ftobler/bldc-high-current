@@ -132,7 +132,6 @@ void Motor::adc_calculate() {
 void Motor::timer_isr() {
 	adc_calculate();
 
-	angle += angle_increment;
 //	if (angle > 2*TWO_PI) {
 //		angle -= TWO_PI;
 //	}
@@ -146,17 +145,43 @@ void Motor::timer_isr() {
 		if (supply_voltage > 11.0f) pwm_on = true;
 	}
 
-	if (pwm_on) {
-		assign_pwm(power, angle);
-	} else {
-		assign_stop();
-	}
+    if (!pwm_on) {
+        assign_stop();
+        return;
+    }
+
+    switch (state) {
+		case Mode::off:
+			angle = 0;
+			power = 0;
+			assign_stop();
+			break;
+
+		case Mode::manual:
+			angle += angle_increment;
+			assign_pwm(power, angle);
+			break;
+
+        case Mode::calibration:
+            run_calibration_step();
+            break;
+
+        case Mode::power_control:
+        	run_power_control();
+        	break;
+
+        case Mode::current_control:
+            run_current_control();
+            break;
+    }
+    old_state = state;
 
 }
 
 
 void Motor::encoder_isr(int32_t angle_value) {
 	// angle is expressed as 0..4095 being 2 pi. that is motor shaft rotation and not pole rotation
+	encoder_value = angle_value;
 }
 
 
@@ -205,5 +230,39 @@ inline void Motor::assign_stop() {
     timer.Instance->CCR1 = 0;
     timer.Instance->CCR2 = 0;
     timer.Instance->CCR3 = 0;
+}
+
+
+inline void Motor::run_calibration_step() {
+	if (old_state != state) {
+		// init calibration
+		calibration.start();
+	} else {
+		calibration.update(encoder_value);
+	    assign_pwm(calibration.power(), calibration.angle());
+		if (calibration.done()) {
+			state = Mode::off;
+		}
+	}
+}
+
+
+inline void Motor::run_power_control() {
+	constexpr int pole_pairs = 5;
+//	float current_angle_ = encoder_value - encoder_offset - 4096 / pole_pairs;
+	constexpr float gain = pole_pairs * TWO_PI / 4096.0;
+	float current_angle = (encoder_value - encoder_offset) * gain + PI;
+	if (power > 0) {
+		angle = current_angle + PI / 2;
+		assign_pwm(power, angle);
+	} else {
+		angle = current_angle - PI / 2;
+		assign_pwm(-power, angle);
+	}
+}
+
+
+inline void Motor::run_current_control() {
+
 }
 

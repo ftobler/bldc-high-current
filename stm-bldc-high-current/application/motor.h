@@ -8,6 +8,7 @@
 #pragma once
 
 #include "stm32_hal.h"
+#include "calibration.h"
 
 
  struct  __attribute__((packed)) Adc_dma {
@@ -22,6 +23,14 @@ static_assert(sizeof(Adc_dma) == 8);  // if false, compiler is set up wrong
 
 class Motor {
 private:
+	enum class Mode : uint8_t {
+		off,            // safe off
+		manual,         // direct set of angle/power from user or debug
+		calibration,    // static PWM stepping for encoder alignment
+		power_control,  // sets angle automatic +90deg or -90deg
+		current_control // inner FOC or current loop active
+	};
+
 	static constexpr uint32_t timer_psc = 0;
 	static constexpr uint32_t mcu_frequency = 170000000;
 	static constexpr uint32_t pwm_frequency = 24000;
@@ -41,12 +50,19 @@ private:
 	float power = 0.0f;
 	float angle = 0.0f;
 	float angle_increment = 0.0f;
+	Mode state = Mode::off;
+	Mode old_state = Mode::off;
 
 	// calculated phase currents
 	float current_a = 0.0f;
 	float current_b = 0.0f;
 	float current_c = 0.0f;
 	float supply_voltage = 0.0f;
+	int32_t encoder_value = 0;
+	int32_t encoder_offset = 2043;  // from a calibration
+
+	Calibration calibration;
+
 	inline void assign_pwm(float power, float angle);
 	inline void assign_stop();
 	inline void setup_timer();
@@ -55,6 +71,9 @@ private:
 	inline float calculate_adc_current(int16_t sample);
 	inline void adc_calculate();
 	void calibrate_adc();
+	inline void run_calibration_step();
+	inline void run_power_control();
+	inline void run_current_control();
 public:
 	Motor(
 			TIM_HandleTypeDef& timer,
@@ -81,4 +100,6 @@ public:
 	inline float get_current_a() { return current_a; }
 	inline float get_current_b() { return current_b; }
 	inline float get_current_c() { return current_c; }
+//	inline void set_mode(Mode m) { state = m; }
+//	inline Mode get_mode() const { return state; }
 };
