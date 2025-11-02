@@ -1,0 +1,21 @@
+name: STM32CubeIDE Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4
+
+    - name: Build STM32CubeIDE project
+      uses: xanderhendriks/action-build-stm32cubeide@v15.0
+      with:
+        project-path: 'stm-bldc-high-current'
+        project-target: 'grbl/Debug'
