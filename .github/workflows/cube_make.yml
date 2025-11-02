@@ -1,0 +1,26 @@
+name: cube_make build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: remove default Makefile
+      run: rm -f Makefile
+
+    - name: Generate Makefile using action
+      uses: ftobler/cube_make@v1
+      with:
+        project_path: stm-bldc-high-current
+
+    - name: Build using new Makefile
+      run: |
+        make
