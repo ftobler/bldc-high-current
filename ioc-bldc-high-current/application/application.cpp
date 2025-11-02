@@ -10,24 +10,34 @@
 #include "gpio_low_level.h"
 #include "main.h"
 #include "motor.h"
+#include "brake.h"
 
 
+/*
+ * Note about ADC/timer setup
+ * TIM1 ARR is configured through the motor module
+ * TIM3 is slaved off of TIM1 (TIM1 resets TIM3 on ARR, so TIM3 never reaches its ARR)
+ * ADC is triggered on TIM1 Capture Compare 6 when ARR is at 100%
+ */
 extern ADC_HandleTypeDef hadc1;  // main.c
 extern TIM_HandleTypeDef htim1;  // main.c
+extern TIM_HandleTypeDef htim3;  // main.c
 
 
 static void update_led();
 
 
-Motor motor(
+static Motor motor(
 		htim1,
 		hadc1
 );
+static Brake brake (htim3);
 
 
 
 
 void application_init() {
+	brake.init();
 	motor.init();
 }
 
@@ -71,4 +81,5 @@ void update_led() {
 
 void pwm_timer_isr() {
 	motor.timer_isr();
+	brake.update(motor.get_supply_voltage());
 }

@@ -74,4 +74,9 @@ public:
 	 * it's time to re-calculate the currents from last ADC capture
 	 */
 	void timer_isr();
+
+	inline float get_supply_voltage() { return supply_voltage; }
+	inline float get_current_a() { return current_a; }
+	inline float get_current_b() { return current_b; }
+	inline float get_current_c() { return current_c; }
 };

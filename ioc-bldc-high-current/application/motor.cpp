@@ -29,6 +29,8 @@ void Motor::setup_timer() {
 
 
 void Motor::setup_adc() {
+	HAL_TIM_OC_Start(&timer, TIM_CHANNEL_6);
+	timer.Instance->CCR6 = timer_arr - 1;  // this is where i see the signals best
 	HAL_ADC_Start_DMA(&adc, reinterpret_cast<uint32_t*>(&adc_buffer), 4);
 }
 
@@ -134,12 +136,12 @@ void Motor::timer_isr() {
 	adc_calculate();
 
 	angle += angle_increment;
-	if (angle > TWO_PI) {
-		angle -= PI;
-	}
-	if (angle < -TWO_PI) {
-		angle += PI;
-	}
+//	if (angle > 2*TWO_PI) {
+//		angle -= TWO_PI;
+//	}
+//	if (angle < -2*TWO_PI) {
+//		angle += TWO_PI;
+//	}
 
 	if (supply_voltage > 10.0f) {
 		assign_pwm(power, angle);
