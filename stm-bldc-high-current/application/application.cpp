@@ -11,6 +11,7 @@
 #include "main.h"
 #include "motor.h"
 #include "brake.h"
+#include "as5600.h"
 
 
 /*
@@ -20,8 +21,10 @@
  * ADC is triggered on TIM1 Capture Compare 6 when ARR is at 100%
  */
 extern ADC_HandleTypeDef hadc1;  // main.c
-extern TIM_HandleTypeDef htim1;  // main.c
-extern TIM_HandleTypeDef htim3;  // main.c
+extern TIM_HandleTypeDef htim1;  // main.c (pwm)
+extern TIM_HandleTypeDef htim3;  // main.c (brake)
+extern I2C_HandleTypeDef hi2c2;  // main.c (eeprom)
+extern I2C_HandleTypeDef hi2c3;  // main.c (encoder)
 
 
 static void update_led();
@@ -32,7 +35,9 @@ static Motor motor(
 		hadc1
 );
 static Brake brake (htim3);
+static As5600 encoder(hi2c3);
 
+static volatile bool encoder_poll = false;
 
 
 
@@ -44,6 +49,11 @@ void application_init() {
 
 void application_loop() {
 	update_led();
+	if (encoder_poll) {
+		// encoder task gets executed in 4kHz interval
+		encoder.poll();
+		encoder_poll = false;
+	}
 }
 
 
@@ -82,4 +92,13 @@ void update_led() {
 void pwm_timer_isr() {
 	motor.timer_isr();
 	brake.update(motor.get_supply_voltage());
+
+	static constexpr uint16_t count_reload = 5;
+	static uint16_t count = count_reload;
+	if (count) {
+		count--;
+	} else {
+		count = count_reload;
+		encoder_poll = true;
+	}
 }
