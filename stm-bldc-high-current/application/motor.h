@@ -75,6 +75,7 @@ public:
 	 * it's time to re-calculate the currents from last ADC capture
 	 */
 	void timer_isr();
+	void encoder_isr(int32_t angle_value);
 
 	inline float get_supply_voltage() { return supply_voltage; }
 	inline float get_current_a() { return current_a; }

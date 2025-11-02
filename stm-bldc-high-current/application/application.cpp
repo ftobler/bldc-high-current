@@ -100,5 +100,8 @@ void pwm_timer_isr() {
 	} else {
 		count = count_reload;
 		encoder_poll = true;
+
+		const int32_t angle_value = encoder.angle();
+		motor.encoder_isr(angle_value);
 	}
 }

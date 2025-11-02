@@ -86,10 +86,7 @@ void Motor::init() {
 
     HAL_Delay(2);  // wait 1ms guaranteed for some samples to come in
 
-
     calibrate_adc();
-
-
     // start PWM outputs already started in setup_timer
 }
 
@@ -155,6 +152,11 @@ void Motor::timer_isr() {
 		assign_stop();
 	}
 
+}
+
+
+void Motor::encoder_isr(int32_t angle_value) {
+	// angle is expressed as 0..4095 being 2 pi. that is motor shaft rotation and not pole rotation
 }
 
 
