@@ -143,7 +143,13 @@ void Motor::timer_isr() {
 //		angle += TWO_PI;
 //	}
 
-	if (supply_voltage > 10.0f) {
+	if (pwm_on) {
+		if (supply_voltage < 10.0f) pwm_on = false;
+	} else {
+		if (supply_voltage > 11.0f) pwm_on = true;
+	}
+
+	if (pwm_on) {
 		assign_pwm(power, angle);
 	} else {
 		assign_stop();
