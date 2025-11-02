@@ -23,10 +23,10 @@ private:
 	};
 
 	// simple constants for this calibration routine
-	static constexpr float CAL_PWM = 0.15f;          // 15% duty during calibration
-	static constexpr int   CAL_ELEC_STEPS = 4096*8;  // number of electrical steps
-	static constexpr int   POLE_PAIRS = 5;           // motor-specific!
-	static constexpr float CAL_REV = 2.0f * PI;      // one electrical revolution
+	static constexpr float CAL_PWM = 0.15f;                  // 15% duty during calibration
+	static constexpr int   CAL_ELEC_STEPS = 4096*8;          // number of electrical steps
+	static constexpr int   ELECTRICAL_SWEEP_REVOLUTIONS = 5; // number of electrical rotations to be made (must be ODD!)
+	static constexpr float CAL_REV = 2.0f * PI;              // one electrical revolution
 	static constexpr float CAL_STEP_ANGLE = CAL_REV / CAL_ELEC_STEPS;
 
 	State state = State::idle;

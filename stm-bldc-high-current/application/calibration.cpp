@@ -58,7 +58,7 @@ void Calibration::update(int32_t encoder_value) {
 		accum_count++;
 
 		step++;
-		if (step >= CAL_ELEC_STEPS * POLE_PAIRS) {
+		if (step >= CAL_ELEC_STEPS * ELECTRICAL_SWEEP_REVOLUTIONS) {
 			float avg = static_cast<float>(accum_encoder) / static_cast<float>(accum_count);
 			offset = avg;  // this will be PI rotor angle
 			output_power = 0.0f;
