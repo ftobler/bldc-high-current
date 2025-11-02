@@ -9,6 +9,7 @@
 
 #include "stm32_hal.h"
 #include "calibration.h"
+#include "foc.h"
 
 
  struct  __attribute__((packed)) Adc_dma {
@@ -36,6 +37,8 @@ private:
 	static constexpr uint32_t pwm_frequency = 24000;
 	static constexpr uint32_t timer_arr = mcu_frequency / pwm_frequency / 2;  // div 2 is because we are using center aligned mode
 
+	static constexpr int pole_pairs = 5;
+
 	TIM_HandleTypeDef& timer;
 	ADC_HandleTypeDef& adc;
 	Adc_dma adc_buffer = {0};
@@ -62,8 +65,10 @@ private:
 	int32_t encoder_offset = 2043;  // from a calibration
 
 	Calibration calibration;
+	Foc foc;
 
 	inline void assign_pwm(float power, float angle);
+	inline void assign_pwm_volt(float sa, float sb, float sc);
 	inline void assign_stop();
 	inline void setup_timer();
 	inline void setup_adc();

@@ -192,20 +192,25 @@ inline void Motor::assign_pwm(float power, float angle) {
     if (power < 0.0f) power = 0.0f;
     if (power > 1.0f) power = 1.0f;
 
-    // precompute duty scaling
-    constexpr uint32_t min_ticks = 150;
-    constexpr uint32_t max_ticks = timer_arr - min_ticks;
-    constexpr float half_period = static_cast<float>(timer_arr) / 2.0f;
-
     // get normalized sine phase values
     const float sa = fast_sin(angle);
     const float sb = fast_sin(angle - ONE_THIRD_PI);
     const float sc = fast_sin(angle + ONE_THIRD_PI);
 
+    assign_pwm_volt(sa * power, sb * power, sc * power);
+}
+
+
+inline void Motor::assign_pwm_volt(float sa, float sb, float sc) {
+    // precompute duty scaling
+    constexpr uint32_t min_ticks = 150;
+    constexpr uint32_t max_ticks = timer_arr - min_ticks;
+    constexpr float half_period = static_cast<float>(timer_arr) / 2.0f;
+
     // convert to duty ticks (center-aligned, bipolar to unipolar mapping)
     auto scale_to_ticks = [&](float x) -> uint32_t {
         // normalized sine -1..1 mapped to 0..timer_arr
-        float duty = (x * power * half_period) + half_period;
+        float duty = (x * half_period) + half_period;
         // enforce clamp limits
         if (duty < static_cast<float>(min_ticks))
             duty = static_cast<float>(min_ticks);
@@ -248,8 +253,6 @@ inline void Motor::run_calibration_step() {
 
 
 inline void Motor::run_power_control() {
-	constexpr int pole_pairs = 5;
-//	float current_angle_ = encoder_value - encoder_offset - 4096 / pole_pairs;
 	constexpr float gain = pole_pairs * TWO_PI / 4096.0;
 	float current_angle = (encoder_value - encoder_offset) * gain + PI;
 	if (power > 0) {
@@ -263,6 +266,18 @@ inline void Motor::run_power_control() {
 
 
 inline void Motor::run_current_control() {
+	constexpr float gain = pole_pairs * TWO_PI / 4096.0;
+	float current_angle = (encoder_value - encoder_offset) * gain + PI;
+	Vector3 v = foc.update(-current_a, -current_b, -current_c, current_angle);
+
+	constexpr float max = 0.3f;
+	if (v.a > max || v.b > max || v.c > max || v.a < -max || v.b < -max || v.c < -max) {
+		// emergency stop
+		assign_stop();
+		state = Mode::off;
+	} else {
+		assign_pwm_volt(v.a, v.b, v.c);
+	}
 
 }
 
