@@ -74,10 +74,11 @@ Vector3 Foc::update(float current_a, float current_b, float current_c, float ang
     integrator_q += err_q * ki_q;
 
     // limit integrators to avoid windup
-    if (integrator_d > 1.0f) integrator_d = 1.0f;
-    if (integrator_d < -1.0f) integrator_d = -1.0f;
-    if (integrator_q > 1.0f) integrator_q = 1.0f;
-    if (integrator_q < -1.0f) integrator_q = -1.0f;
+    constexpr float integrator_limit = 1.0f;
+    if (integrator_d > integrator_limit) integrator_d = integrator_limit;
+    if (integrator_d < -integrator_limit) integrator_d = -integrator_limit;
+    if (integrator_q > integrator_limit) integrator_q = integrator_limit;
+    if (integrator_q < -integrator_limit) integrator_q = -integrator_limit;
 
     const float v_d = kp_d * err_d + integrator_d;
     const float v_q = kp_q * err_q + integrator_q;
