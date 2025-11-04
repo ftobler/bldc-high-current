@@ -75,7 +75,7 @@ private:
 	inline float calculate_supply_voltage(uint16_t sample);
 	inline float calculate_adc_current(int16_t sample);
 	inline void adc_calculate();
-	void calibrate_adc();
+	inline void calibrate_adc();
 	inline void run_calibration_step();
 	inline void run_power_control();
 	inline void run_current_control();

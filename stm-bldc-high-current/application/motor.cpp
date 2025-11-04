@@ -28,7 +28,7 @@ void Motor::setup_timer() {
 }
 
 
-void Motor::setup_adc() {
+inline void Motor::setup_adc() {
 	HAL_TIM_OC_Start(&timer, TIM_CHANNEL_6);
 	timer.Instance->CCR6 = timer_arr - 1;  // this is where i see the signals best
 	HAL_ADC_Start_DMA(&adc, reinterpret_cast<uint32_t*>(&adc_buffer), 4);
@@ -91,7 +91,7 @@ void Motor::init() {
 }
 
 
-void Motor::calibrate_adc() {
+inline void Motor::calibrate_adc() {
 	constexpr auto N = 64;
 	uint32_t current_a_average = 0;
 	uint32_t current_b_average = 0;
@@ -110,7 +110,7 @@ void Motor::calibrate_adc() {
 }
 
 
-void Motor::adc_calculate() {
+inline void Motor::adc_calculate() {
     // This is called from the timer update ISR context.
     // Copy last DMA samples (adc_buffer is written by DMA, make a local copy quickly)
     const Adc_dma local = adc_buffer;  // small struct, cheap copy

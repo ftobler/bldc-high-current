@@ -12,7 +12,7 @@
 /**
  * 3 phases to 2 vectors
  */
-void Foc::clarke_transform(float a, float b, float c, float& alpha, float& beta) {
+inline void Foc::clarke_transform(float a, float b, float c, float& alpha, float& beta) {
 	alpha = a;
 	constexpr float one_over_sqrt_three = 0.5773502691896258f;  // 1/sqrt(3) (from python)
 	beta = one_over_sqrt_three * (b - c);
@@ -22,7 +22,7 @@ void Foc::clarke_transform(float a, float b, float c, float& alpha, float& beta)
 /**
  * 2 vectors to 3 phases
  */
-void Foc::inv_clarke_transform(float alpha, float beta, float& a, float& b, float& c) {
+inline void Foc::inv_clarke_transform(float alpha, float beta, float& a, float& b, float& c) {
 	a = alpha;
 	constexpr float sine_pi_third = 0.8660254037844386f;  // sin(pi/3)  (from python)
 	b = -0.5f * alpha + sine_pi_third * beta;
@@ -33,7 +33,7 @@ void Foc::inv_clarke_transform(float alpha, float beta, float& a, float& b, floa
 /**
  * rotate 2 vector system
  */
-void Foc::park_transform(float alpha, float beta, float angle, float& d, float& q) {
+inline void Foc::park_transform(float alpha, float beta, float angle, float& d, float& q) {
 	const float s = fast_sin(angle);
 	const float c = fast_cos(angle);
 	d =  alpha * c + beta * s;
@@ -44,7 +44,7 @@ void Foc::park_transform(float alpha, float beta, float angle, float& d, float& 
 /**
  * rotate 2 vector system (backwards)
  */
-void Foc::inv_park_transform(float d, float q, float angle, float& alpha, float& beta) {
+inline void Foc::inv_park_transform(float d, float q, float angle, float& alpha, float& beta) {
 	const float s = fast_sin(angle);
 	const float c = fast_cos(angle);
 	alpha = d * c - q * s;
