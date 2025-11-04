@@ -123,9 +123,11 @@ inline void Motor::adc_calculate() {
     const int16_t b_raw = static_cast<int16_t>(local.current_b) - current_b_zero_offset;
     const int16_t c_raw = static_cast<int16_t>(local.current_c) - current_c_zero_offset;
 
-    current_a = calculate_adc_current(static_cast<uint16_t>(a_raw));
-    current_b = calculate_adc_current(static_cast<uint16_t>(b_raw));
-    current_c = calculate_adc_current(static_cast<uint16_t>(c_raw));
+    float new_current_a = calculate_adc_current(static_cast<uint16_t>(a_raw));
+    float new_current_b = calculate_adc_current(static_cast<uint16_t>(b_raw));
+    float new_current_c = calculate_adc_current(static_cast<uint16_t>(c_raw));
+
+    current_kirchhoff_reconstruct(new_current_a, new_current_b, new_current_c);
 
     // tp filtered version
     constexpr float filter_new = 0.33f;
@@ -133,6 +135,73 @@ inline void Motor::adc_calculate() {
     current_a_tpfilter = current_a_tpfilter * filter_old + current_a * filter_new;
     current_b_tpfilter = current_b_tpfilter * filter_old + current_b * filter_new;
     current_c_tpfilter = current_c_tpfilter * filter_old + current_c * filter_new;
+}
+
+
+inline void Motor::current_kirchhoff_reconstruct(float a, float b, float c) {
+//    if (a > c && b > c) {
+//        // c is the smallest
+//        current_a = a;
+//        current_b = b;
+//        current_c = -a - b;
+//    } else if (a > b && c > b) {
+//        // b is the smallest
+//        current_a = a;
+//        current_b = -a - c;
+//        current_c = c;
+//    } else {
+//        // a is the smallest
+//        current_a = -b - c;
+//        current_b = b;
+//        current_c = c;
+//    }
+
+//    if (a < c && b < c) {
+//        // c is the biggest
+//        current_a = a;
+//        current_b = b;
+//        current_c = -a - b;
+//    } else if (a < b && c < b) {
+//        // b is the biggest
+//        current_a = a;
+//        current_b = -a - c;
+//        current_c = c;
+//    } else {
+//        // a is the biggest
+//        current_a = -b - c;
+//        current_b = b;
+//        current_c = c;
+//    }
+
+//    if (a > c && c > b) {
+//        // c is mid
+//        current_a = a;
+//        current_b = b;
+//        current_c = -a - b;
+//    } else if (a > b && b > c) {
+//        // b is mid
+//        current_a = a;
+//        current_b = -a - c;
+//        current_c = c;
+//    } else {
+//        // a is mid
+//        current_a = -b - c;
+//        current_b = b;
+//        current_c = c;
+//    }
+
+//    current_a = a;
+//    current_b = -a - c;
+//    current_c = c;
+
+//   const float mean = (a + b + c) / 3.0f;
+//   current_a = a - mean;
+//   current_b = b - mean;
+//   current_c = c - mean;
+
+     current_a = a;
+     current_b = -a - c;  // b is defect
+     current_c = c;
 }
 
 
@@ -294,7 +363,7 @@ inline void Motor::run_current_control() {
     float current_angle = (encoder_value - encoder_offset) * gain - PI / 2.0f;
 
     // using the foc algorythm (park clarke) re-evaluate pwm voltags
-    Vector3 v = foc.update(-current_a_tpfilter, -current_b_tpfilter, -current_c_tpfilter, current_angle);
+    Vector3 v = foc.update(-current_a, -current_b, -current_c, current_angle);
 
     // assign pwm
     pwm_safe_assign(v);
