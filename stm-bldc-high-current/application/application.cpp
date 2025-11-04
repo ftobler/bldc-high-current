@@ -89,19 +89,23 @@ void update_led() {
 }
 
 
+/**
+ * fast task with 24kHz
+ */
 void pwm_timer_isr() {
     motor.timer_isr();
     brake.update(motor.get_supply_voltage());
 
+    // clock breakdown for encoder
     static constexpr uint16_t count_reload = 5;
     static uint16_t count = count_reload;
     if (count) {
         count--;
     } else {
         count = count_reload;
-        encoder_poll = true;
+        encoder_poll = true;  // indicate that encoder neds to be polled
 
         const int32_t angle_value = encoder.angle();
-        motor.encoder_isr(angle_value);
+        motor.encoder_isr(angle_value);  // do the part of the control loops and dsp that runs on encoder frequency
     }
 }

@@ -34,7 +34,7 @@ private:
 
     static constexpr uint32_t timer_psc = 0;
     static constexpr uint32_t mcu_frequency = 170000000;
-    static constexpr uint32_t pwm_frequency = 24000;
+    static constexpr uint32_t pwm_frequency = 25000;
     static constexpr uint32_t timer_arr = mcu_frequency / pwm_frequency / 2;  // div 2 is because we are using center aligned mode
 
     static constexpr int pole_pairs = 5;
