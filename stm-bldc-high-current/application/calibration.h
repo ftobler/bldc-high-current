@@ -14,46 +14,46 @@
 
 class Calibration {
 private:
-	enum class State {
-		idle,
-		find_zero,
-		go_to_start,
-		sweep,
-		done
-	};
+    enum class State {
+        idle,
+        find_zero,
+        go_to_start,
+        sweep,
+        done
+    };
 
-	// simple constants for this calibration routine
-	static constexpr float CAL_PWM = 0.15f;                  // 15% duty during calibration
-	static constexpr int   CAL_ELEC_STEPS = 4096*8;          // number of electrical steps
-	static constexpr int   ELECTRICAL_SWEEP_REVOLUTIONS = 5; // number of electrical rotations to be made (must be ODD!)
-	static constexpr float CAL_REV = 2.0f * PI;              // one electrical revolution
-	static constexpr float CAL_STEP_ANGLE = CAL_REV / CAL_ELEC_STEPS;
+    // simple constants for this calibration routine
+    static constexpr float CAL_PWM = 0.15f;                  // 15% duty during calibration
+    static constexpr int   CAL_ELEC_STEPS = 4096*8;          // number of electrical steps
+    static constexpr int   ELECTRICAL_SWEEP_REVOLUTIONS = 5; // number of electrical rotations to be made (must be ODD!)
+    static constexpr float CAL_REV = 2.0f * PI;              // one electrical revolution
+    static constexpr float CAL_STEP_ANGLE = CAL_REV / CAL_ELEC_STEPS;
 
-	State state = State::idle;
-	int step = 0;
+    State state = State::idle;
+    int step = 0;
 
-	float output_power = 0.0f;
-	float angle_value = 0.0f;
+    float output_power = 0.0f;
+    float angle_value = 0.0f;
 
-	// encoder accumulation
-	int64_t accum_encoder = 0;
-	int accum_count = 0;
-	float offset = 0.0f;
+    // encoder accumulation
+    int64_t accum_encoder = 0;
+    int accum_count = 0;
+    float offset = 0.0f;
 
 
 public:
-	void start();
-	void update(int32_t encoder_value);
+    void start();
+    void update(int32_t encoder_value);
 
-	inline float power() {
-		return output_power;
-	}
+    inline float power() {
+        return output_power;
+    }
 
-	inline float angle() {
-		return angle_value;
-	}
+    inline float angle() {
+        return angle_value;
+    }
 
-	inline bool done() {
-		return state == State::done;
-	}
+    inline bool done() {
+        return state == State::done;
+    }
 };

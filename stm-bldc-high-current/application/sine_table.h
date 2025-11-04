@@ -21,10 +21,10 @@ extern const float sine_table[SINE_TABLE_SIZE];
 
 
 inline float fast_sin(float angle) {
-	const float normalized_absolute = angle / TWO_PI;
-	const float normalized = normalized_absolute - std::floor(normalized_absolute);
-	const size_t index = static_cast<size_t>(normalized * SINE_TABLE_SIZE);
-	return sine_table[index];
+    const float normalized_absolute = angle / TWO_PI;
+    const float normalized = normalized_absolute - std::floor(normalized_absolute);
+    const size_t index = static_cast<size_t>(normalized * SINE_TABLE_SIZE);
+    return sine_table[index];
 }
 
 

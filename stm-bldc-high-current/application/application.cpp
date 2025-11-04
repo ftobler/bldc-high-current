@@ -31,8 +31,8 @@ static void update_led();
 
 
 static Motor motor(
-		htim1,
-		hadc1
+        htim1,
+        hadc1
 );
 static Brake brake (htim3);
 static As5600 encoder(hi2c3);
@@ -42,18 +42,18 @@ static volatile bool encoder_poll = false;
 
 
 void application_init() {
-	brake.init();
-	motor.init();
+    brake.init();
+    motor.init();
 }
 
 
 void application_loop() {
-	update_led();
-	if (encoder_poll) {
-		// encoder task gets executed in 4kHz interval
-		encoder.poll();
-		encoder_poll = false;
-	}
+    update_led();
+    if (encoder_poll) {
+        // encoder task gets executed in 4kHz interval
+        encoder.poll();
+        encoder_poll = false;
+    }
 }
 
 
@@ -90,18 +90,18 @@ void update_led() {
 
 
 void pwm_timer_isr() {
-	motor.timer_isr();
-	brake.update(motor.get_supply_voltage());
+    motor.timer_isr();
+    brake.update(motor.get_supply_voltage());
 
-	static constexpr uint16_t count_reload = 5;
-	static uint16_t count = count_reload;
-	if (count) {
-		count--;
-	} else {
-		count = count_reload;
-		encoder_poll = true;
+    static constexpr uint16_t count_reload = 5;
+    static uint16_t count = count_reload;
+    if (count) {
+        count--;
+    } else {
+        count = count_reload;
+        encoder_poll = true;
 
-		const int32_t angle_value = encoder.angle();
-		motor.encoder_isr(angle_value);
-	}
+        const int32_t angle_value = encoder.angle();
+        motor.encoder_isr(angle_value);
+    }
 }

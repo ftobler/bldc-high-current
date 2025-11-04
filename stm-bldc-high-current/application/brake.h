@@ -13,9 +13,9 @@
 
 class Brake {
 private:
-	TIM_HandleTypeDef& timer;
+    TIM_HandleTypeDef& timer;
 public:
-	Brake(TIM_HandleTypeDef& timer): timer(timer) {}
-	void init();
-	void update(float voltage);
+    Brake(TIM_HandleTypeDef& timer): timer(timer) {}
+    void init();
+    void update(float voltage);
 };

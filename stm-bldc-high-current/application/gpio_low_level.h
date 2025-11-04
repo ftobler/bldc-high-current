@@ -38,11 +38,11 @@
  * state: 0 -> reset pin, otherwise set pin
  */
 #define gpio_ll_write_pp(port, pin, state)    ({\
-	if (state) {\
-		gpio_ll_set_pp((port), (pin));\
-	} else {\
-		gpio_ll_reset_pp((port), (pin));\
-	}\
+    if (state) {\
+        gpio_ll_set_pp((port), (pin));\
+    } else {\
+        gpio_ll_reset_pp((port), (pin));\
+    }\
 })
 
 #

@@ -29,9 +29,9 @@ void Motor::setup_timer() {
 
 
 inline void Motor::setup_adc() {
-	HAL_TIM_OC_Start(&timer, TIM_CHANNEL_6);
-	timer.Instance->CCR6 = timer_arr - 1;  // this is where i see the signals best
-	HAL_ADC_Start_DMA(&adc, reinterpret_cast<uint32_t*>(&adc_buffer), 4);
+    HAL_TIM_OC_Start(&timer, TIM_CHANNEL_6);
+    timer.Instance->CCR6 = timer_arr - 1;  // this is where i see the signals best
+    HAL_ADC_Start_DMA(&adc, reinterpret_cast<uint32_t*>(&adc_buffer), 4);
 }
 
 
@@ -92,21 +92,21 @@ void Motor::init() {
 
 
 inline void Motor::calibrate_adc() {
-	constexpr auto N = 64;
-	uint32_t current_a_average = 0;
-	uint32_t current_b_average = 0;
-	uint32_t current_c_average = 0;
+    constexpr auto N = 64;
+    uint32_t current_a_average = 0;
+    uint32_t current_b_average = 0;
+    uint32_t current_c_average = 0;
 
-	for (int i = 0; i < N; i++) {
-		current_a_average += adc_buffer.current_a;
-		current_b_average += adc_buffer.current_b;
-		current_c_average += adc_buffer.current_c;
-		HAL_Delay(1);  // wait for next ADC update (blocking)
-	}
+    for (int i = 0; i < N; i++) {
+        current_a_average += adc_buffer.current_a;
+        current_b_average += adc_buffer.current_b;
+        current_c_average += adc_buffer.current_c;
+        HAL_Delay(1);  // wait for next ADC update (blocking)
+    }
 
-	current_a_zero_offset = static_cast<int16_t>(current_a_average / N);
-	current_b_zero_offset = static_cast<int16_t>(current_b_average / N);
-	current_c_zero_offset = static_cast<int16_t>(current_c_average / N);
+    current_a_zero_offset = static_cast<int16_t>(current_a_average / N);
+    current_b_zero_offset = static_cast<int16_t>(current_b_average / N);
+    current_c_zero_offset = static_cast<int16_t>(current_c_average / N);
 }
 
 
@@ -130,20 +130,20 @@ inline void Motor::adc_calculate() {
 
 
 void Motor::timer_isr() {
-	adc_calculate();
+    adc_calculate();
 
-//	if (angle > 2*TWO_PI) {
-//		angle -= TWO_PI;
-//	}
-//	if (angle < -2*TWO_PI) {
-//		angle += TWO_PI;
-//	}
+//    if (angle > 2*TWO_PI) {
+//        angle -= TWO_PI;
+//    }
+//    if (angle < -2*TWO_PI) {
+//        angle += TWO_PI;
+//    }
 
-	if (pwm_on) {
-		if (supply_voltage < 10.0f) pwm_on = false;
-	} else {
-		if (supply_voltage > 11.0f) pwm_on = true;
-	}
+    if (pwm_on) {
+        if (supply_voltage < 10.0f) pwm_on = false;
+    } else {
+        if (supply_voltage > 11.0f) pwm_on = true;
+    }
 
     if (!pwm_on) {
         assign_stop();
@@ -151,24 +151,24 @@ void Motor::timer_isr() {
     }
 
     switch (state) {
-		case Mode::off:
-			angle = 0;
-			power = 0;
-			assign_stop();
-			break;
+        case Mode::off:
+            angle = 0;
+            power = 0;
+            assign_stop();
+            break;
 
-		case Mode::manual:
-			angle += angle_increment;
-			assign_pwm(power, angle);
-			break;
+        case Mode::manual:
+            angle += angle_increment;
+            assign_pwm(power, angle);
+            break;
 
         case Mode::calibration:
             run_calibration_step();
             break;
 
         case Mode::power_control:
-        	run_power_control();
-        	break;
+            run_power_control();
+            break;
 
         case Mode::current_control:
             run_current_control();
@@ -180,8 +180,8 @@ void Motor::timer_isr() {
 
 
 void Motor::encoder_isr(int32_t angle_value) {
-	// angle is expressed as 0..4095 being 2 pi. that is motor shaft rotation and not pole rotation
-	encoder_value = angle_value;
+    // angle is expressed as 0..4095 being 2 pi. that is motor shaft rotation and not pole rotation
+    encoder_value = angle_value;
 }
 
 
@@ -239,56 +239,56 @@ inline void Motor::assign_stop() {
 
 
 inline void Motor::run_calibration_step() {
-	if (old_state != state) {
-		// init calibration
-		calibration.start();
-	} else {
-		calibration.update(encoder_value);
-	    assign_pwm(calibration.power(), calibration.angle());
-		if (calibration.done()) {
-			state = Mode::off;
-		}
-	}
+    if (old_state != state) {
+        // init calibration
+        calibration.start();
+    } else {
+        calibration.update(encoder_value);
+        assign_pwm(calibration.power(), calibration.angle());
+        if (calibration.done()) {
+            state = Mode::off;
+        }
+    }
 }
 
 
 inline void Motor::run_power_control() {
-	constexpr float gain = pole_pairs * TWO_PI / 4096.0;
-	float current_angle = (encoder_value - encoder_offset) * gain + PI;
-	if (power > 0) {
-		angle = current_angle + PI / 2;
-		assign_pwm(power, angle);
-	} else {
-		angle = current_angle - PI / 2;
-		assign_pwm(-power, angle);
-	}
+    constexpr float gain = pole_pairs * TWO_PI / 4096.0;
+    float current_angle = (encoder_value - encoder_offset) * gain + PI;
+    if (power > 0) {
+        angle = current_angle + PI / 2;
+        assign_pwm(power, angle);
+    } else {
+        angle = current_angle - PI / 2;
+        assign_pwm(-power, angle);
+    }
 }
 
 
 inline void Motor::run_current_control() {
-	if (old_state != state) {
-		foc.start();
-	}
-	constexpr float gain = pole_pairs * TWO_PI / 4096.0;
-	float current_angle = (encoder_value - encoder_offset) * gain + PI;
-	Vector3 v = foc.update(-current_a, -current_b, -current_c, current_angle);
+    if (old_state != state) {
+        foc.start();
+    }
+    constexpr float gain = pole_pairs * TWO_PI / 4096.0;
+    float current_angle = (encoder_value - encoder_offset) * gain + PI;
+    Vector3 v = foc.update(-current_a, -current_b, -current_c, current_angle);
 
-	auto inbound = [&](float x, float max) -> bool {
-		return x > max || x < -max;
-	};
-	auto inbound3 = [&](float a, float b, float c, float max) -> bool {
-		return inbound(a, max) || inbound(b, max) || inbound(c, max);
-	};
+    auto inbound = [&](float x, float max) -> bool {
+        return x > max || x < -max;
+    };
+    auto inbound3 = [&](float a, float b, float c, float max) -> bool {
+        return inbound(a, max) || inbound(b, max) || inbound(c, max);
+    };
 
-	constexpr float max_current = 50.0f;
-	constexpr float max_pwm = 0.9f;
-	if (inbound3(v.a, v.b, v.c, max_pwm) || inbound3(current_a, current_b, current_c, max_current)) {
-		// emergency stop
-		assign_stop();
-		state = Mode::off;
-	} else {
-		assign_pwm_volt(v.a, v.b, v.c);
-	}
+    constexpr float max_current = 50.0f;
+    constexpr float max_pwm = 0.9f;
+    if (inbound3(v.a, v.b, v.c, max_pwm) || inbound3(current_a, current_b, current_c, max_current)) {
+        // emergency stop
+        assign_stop();
+        state = Mode::off;
+    } else {
+        assign_pwm_volt(v.a, v.b, v.c);
+    }
 
 }
 
