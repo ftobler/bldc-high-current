@@ -58,12 +58,34 @@ void application_loop() {
 
 
 void update_led() {
-    constexpr uint32_t num_led = 8;
-    constexpr uint32_t cycle_ticks = 500 / num_led;  // ticks per LED step
-    const uint32_t t = uwTick;
-
-    // determine which LED should be on
-    uint32_t phase = (t / cycle_ticks) % num_led;
+//    constexpr uint32_t num_led = 8;
+//    constexpr uint32_t cycle_ticks = 500 / num_led;  // ticks per LED step
+//    const uint32_t t = uwTick;
+//
+//    // determine which LED should be on
+//    uint32_t phase = (t / cycle_ticks) % num_led;
+//
+//    // turn off all LEDs first
+//    gpio_ll_write(LED1, 0);
+//    gpio_ll_write(LED2, 0);
+//    gpio_ll_write(LED3, 0);
+//    gpio_ll_write(LED4, 0);
+//    gpio_ll_write(LED5, 0);
+//    gpio_ll_write(LED6, 0);
+//    gpio_ll_write(LED7, 0);
+//    gpio_ll_write(LED8, 0);
+//
+//    // turn on the current LED
+//    switch (phase) {
+//        case 0: gpio_ll_write(LED1, 1); break;
+//        case 1: gpio_ll_write(LED2, 1); break;
+//        case 2: gpio_ll_write(LED3, 1); break;
+//        case 3: gpio_ll_write(LED4, 1); break;
+//        case 4: gpio_ll_write(LED5, 1); break;
+//        case 5: gpio_ll_write(LED6, 1); break;
+//        case 6: gpio_ll_write(LED7, 1); break;
+//        case 7: gpio_ll_write(LED8, 1); break;
+//    }
 
     // turn off all LEDs first
     gpio_ll_write(LED1, 0);
@@ -74,9 +96,8 @@ void update_led() {
     gpio_ll_write(LED6, 0);
     gpio_ll_write(LED7, 0);
     gpio_ll_write(LED8, 0);
-
-    // turn on the current LED
-    switch (phase) {
+    int current = motor.get_current_a() * 8 / 10 + 4;
+    switch (current) {
         case 0: gpio_ll_write(LED1, 1); break;
         case 1: gpio_ll_write(LED2, 1); break;
         case 2: gpio_ll_write(LED3, 1); break;
