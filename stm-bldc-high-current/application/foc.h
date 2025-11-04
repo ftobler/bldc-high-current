@@ -43,4 +43,6 @@ private:
 public:
     void start();
     Vector3 update(float current_a, float current_b, float current_c, float angle);
+    void set_id(float new_id) { target_id = new_id; }
+    void set_iq(float new_iq) { target_iq = new_iq; }
 };

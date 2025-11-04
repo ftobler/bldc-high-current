@@ -29,7 +29,14 @@ private:
         manual,         // direct set of angle/power from user or debug
         calibration,    // static PWM stepping for encoder alignment
         power_control,  // sets angle automatic +90deg or -90deg
-        current_control // inner FOC or current loop active
+        current_control, // inner FOC or current loop active
+        position_control
+    };
+    enum class StopReason {
+        none,
+        pwm,
+        current,
+        success,
     };
 
     static constexpr uint32_t timer_psc = 0;
@@ -55,12 +62,17 @@ private:
     float angle_increment = 0.0f;
     Mode state = Mode::off;
     Mode old_state = Mode::off;
+    StopReason stop_reason = StopReason::none;
 
     // calculated phase currents
     float current_a = 0.0f;
     float current_b = 0.0f;
     float current_c = 0.0f;
     float supply_voltage = 0.0f;
+
+    float current_a_tpfilter = 0.0f;
+    float current_b_tpfilter = 0.0f;
+    float current_c_tpfilter = 0.0f;
     int32_t encoder_value = 0;
     int32_t encoder_offset = 2043;  // from a calibration
 
@@ -79,6 +91,8 @@ private:
     inline void run_calibration_step();
     inline void run_power_control();
     inline void run_current_control();
+    inline void run_position_control();
+    inline void pwm_safe_assign(Vector3& v);
 public:
     Motor(
             TIM_HandleTypeDef& timer,

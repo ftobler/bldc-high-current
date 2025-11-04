@@ -126,6 +126,13 @@ inline void Motor::adc_calculate() {
     current_a = calculate_adc_current(static_cast<uint16_t>(a_raw));
     current_b = calculate_adc_current(static_cast<uint16_t>(b_raw));
     current_c = calculate_adc_current(static_cast<uint16_t>(c_raw));
+
+    // tp filtered version
+    constexpr float filter_new = 0.33f;
+    constexpr float filter_old = 1.0f - filter_new;
+    current_a_tpfilter = current_a_tpfilter * filter_old + current_a * filter_new;
+    current_b_tpfilter = current_b_tpfilter * filter_old + current_b * filter_new;
+    current_c_tpfilter = current_c_tpfilter * filter_old + current_c * filter_new;
 }
 
 
@@ -173,6 +180,14 @@ void Motor::timer_isr() {
         case Mode::current_control:
             run_current_control();
             break;
+
+        case Mode::position_control:
+            run_position_control();
+            break;
+
+        default:
+            state = Mode::off;
+            stop_reason = StopReason::none;
     }
     old_state = state;
 
@@ -246,6 +261,7 @@ inline void Motor::run_calibration_step() {
         calibration.update(encoder_value);
         assign_pwm(calibration.power(), calibration.angle());
         if (calibration.done()) {
+            stop_reason = StopReason::success;
             state = Mode::off;
         }
     }
@@ -266,29 +282,69 @@ inline void Motor::run_power_control() {
 
 
 inline void Motor::run_current_control() {
+    // detect state change and if needed re-start the control loops
     if (old_state != state) {
         foc.start();
     }
+
+    // calculate the current angle from the encoder. we have a calibrated encoder value
+    // said value needs to be shifted some round fraction of pi
+    // if id and iq targets appear to be swapped change this offset plus or minus 0.5pi to 1pi
     constexpr float gain = pole_pairs * TWO_PI / 4096.0;
-    float current_angle = (encoder_value - encoder_offset) * gain + PI;
+    float current_angle = (encoder_value - encoder_offset) * gain - PI / 2.0f;
+
+    // using the foc algorythm (park clarke) re-evaluate pwm voltags
     Vector3 v = foc.update(-current_a, -current_b, -current_c, current_angle);
 
-    auto inbound = [&](float x, float max) -> bool {
+    // assign pwm
+    pwm_safe_assign(v);
+
+}
+
+
+inline void Motor::run_position_control() {
+    if (old_state != state) {
+        position.start();
+        foc.set_id(0.0f);
+    }
+
+    const float output = position.update();
+    foc.set_iq(output);
+
+    run_current_control();
+}
+
+/**
+ * apply pwm voltages with safe emergency stop conditions
+ */
+inline void Motor::pwm_safe_assign(Vector3& v) {
+    // lambda helper for safety limits
+    constexpr float max_current = 50.0f;
+    constexpr float max_pwm = 0.95f;
+
+    // lambda helper for single value out of bounds
+    auto outbound = [&](float x, float max) -> bool {
         return x > max || x < -max;
     };
-    auto inbound3 = [&](float a, float b, float c, float max) -> bool {
-        return inbound(a, max) || inbound(b, max) || inbound(c, max);
+    // helper for triple value out of bounds
+    auto outbound3 = [&](float a, float b, float c, float max) -> bool {
+        return outbound(a, max) || outbound(b, max) || outbound(c, max);
     };
 
-    constexpr float max_current = 50.0f;
-    constexpr float max_pwm = 0.9f;
-    if (inbound3(v.a, v.b, v.c, max_pwm) || inbound3(current_a, current_b, current_c, max_current)) {
-        // emergency stop
-        assign_stop();
+    const bool pwm_out_of_bound = outbound3(v.a, v.b, v.c, max_pwm);
+    const bool current_out_of_bound = outbound3(current_a_tpfilter, current_b_tpfilter, current_c_tpfilter, max_current);
+
+    if (pwm_out_of_bound || current_out_of_bound) {
+        assign_stop();  // emergency stop
+        if (pwm_out_of_bound) {
+            stop_reason = StopReason::pwm;
+        }
+        if (current_out_of_bound) {
+            stop_reason = StopReason::current;
+        }
         state = Mode::off;
     } else {
         assign_pwm_volt(v.a, v.b, v.c);
     }
-
 }
 
