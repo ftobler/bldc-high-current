@@ -294,7 +294,7 @@ inline void Motor::run_current_control() {
     float current_angle = (encoder_value - encoder_offset) * gain - PI / 2.0f;
 
     // using the foc algorythm (park clarke) re-evaluate pwm voltags
-    Vector3 v = foc.update(-current_a, -current_b, -current_c, current_angle);
+    Vector3 v = foc.update(-current_a_tpfilter, -current_b_tpfilter, -current_c_tpfilter, current_angle);
 
     // assign pwm
     pwm_safe_assign(v);
@@ -304,12 +304,12 @@ inline void Motor::run_current_control() {
 
 inline void Motor::run_position_control() {
     if (old_state != state) {
-        position.start();
+        position.start(encoder_value);
         foc.set_id(0.0f);
     }
 
-    const float output = position.update();
-    foc.set_iq(output);
+    const float output = position.update(encoder_value);
+    foc.set_iq(-output);
 
     run_current_control();
 }

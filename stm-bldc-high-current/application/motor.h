@@ -10,6 +10,7 @@
 #include "stm32_hal.h"
 #include "calibration.h"
 #include "foc.h"
+#include "position_control.h"
 
 
  struct  __attribute__((packed)) Adc_dma {
@@ -25,12 +26,12 @@ static_assert(sizeof(Adc_dma) == 8);  // if false, compiler is set up wrong
 class Motor {
 private:
     enum class Mode : uint8_t {
-        off,            // safe off
-        manual,         // direct set of angle/power from user or debug
-        calibration,    // static PWM stepping for encoder alignment
-        power_control,  // sets angle automatic +90deg or -90deg
-        current_control, // inner FOC or current loop active
-        position_control
+        off,              // safe off
+        manual,           // direct set of angle/power from user or debug
+        calibration,      // static PWM stepping for encoder alignment
+        power_control,    // sets angle automatic +90deg or -90deg
+        current_control,  // inner FOC or current loop active
+        position_control  // positoin control on top of foc
     };
     enum class StopReason {
         none,
@@ -73,11 +74,12 @@ private:
     float current_a_tpfilter = 0.0f;
     float current_b_tpfilter = 0.0f;
     float current_c_tpfilter = 0.0f;
-    int32_t encoder_value = 0;
+    int32_t encoder_value = 0;  // current angle 12bit
     int32_t encoder_offset = 2043;  // from a calibration
 
     Calibration calibration;
     Foc foc;
+    Position position;
 
     inline void assign_pwm(float power, float angle);
     inline void assign_pwm_volt(float sa, float sb, float sc);

@@ -20,9 +20,9 @@ private:
 
     // --- control gains (tune later) ---
     float kp_d = 0.005f;
-    float ki_d = 0.0005f;
+    float ki_d = 0.001f;
     float kp_q = 0.005f;
-    float ki_q = 0.0005f;
+    float ki_q = 0.001f;
 
     // --- PI integrators ---
     float integrator_d = 0.0f;
