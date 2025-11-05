@@ -42,6 +42,7 @@ static volatile bool encoder_poll = false;
 
 
 void application_init() {
+    encoder.init();
     brake.init();
     motor.init();
 }
@@ -96,7 +97,7 @@ void update_led() {
     gpio_ll_write(LED6, 0);
     gpio_ll_write(LED7, 0);
     gpio_ll_write(LED8, 0);
-    int current = motor.get_current_a() * 8 / 10 + 4;
+    int current = motor.get_current_b() * 8 / 16 + 4;
     switch (current) {
         case 0: gpio_ll_write(LED1, 1); break;
         case 1: gpio_ll_write(LED2, 1); break;
@@ -127,6 +128,6 @@ void pwm_timer_isr() {
         encoder_poll = true;  // indicate that encoder neds to be polled
 
         const int32_t angle_value = encoder.angle();
-        motor.encoder_isr(angle_value);  // do the part of the control loops and dsp that runs on encoder frequency
+        motor.set_angle(angle_value);  // do the part of the control loops and dsp that runs on encoder frequency
     }
 }

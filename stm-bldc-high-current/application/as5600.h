@@ -20,6 +20,7 @@ private:
     int32_t last_angle = 0;
 public:
     As5600(I2C_HandleTypeDef& hi2c): hi2c(hi2c) {};
+    void init();
     void poll();
 
     inline int32_t angle() { return angle_value; }

@@ -7,47 +7,29 @@
 
 #include "position_control.h"
 
-Position::Position() {
-
-}
 
 
 void Position::start(int32_t current_position) {
-    speed_integrator = 0.0f;
-    speed_prev_error = 0.0f;
-    target_speed = 0;
-    prev_position = current_position;
-}
-
-
-void Position::set_target(int32_t target) {
-    target_speed = target;
+    position_integrator = 0.0f;
+    old_error = 0;
 }
 
 
 float Position::update(int32_t current_position) {
-    // Position loop
-//    float pos_error = static_cast<float>(target_position) - static_cast<float>(current_position);
-//    float target_speed = pos_error * pos_p;
+    float error = target_position - current_position;
+    position_integrator += error;
 
-    // Calculate current speed
-    float current_speed = static_cast<float>(current_position - prev_position) * 24000.0f / 4096.0f;
-    prev_position = current_position;
-    current_speed_filtered = 0.9f * current_speed_filtered + 0.1f * current_speed;
+    constexpr auto integrator_max = 1200000.0f;
+    if (position_integrator >  integrator_max) position_integrator =  integrator_max;
+    if (position_integrator < -integrator_max) position_integrator = -integrator_max;
 
-    // Speed loop
-    float speed_error = target_speed - current_speed_filtered;
-    speed_integrator += speed_error;
-//    if (speed_integrator > max_integrator) {
-//        speed_integrator = max_integrator;
-//    } else if (speed_integrator < -max_integrator) {
-//        speed_integrator = -max_integrator;
-//    }
+    float position_derivative = error - old_error;
+    old_error = error;
 
-    float speed_derivative = speed_error - speed_prev_error;
-    speed_prev_error = speed_error;
+    float output = error * position_p + position_integrator * position_i + position_derivative * position_d;
 
-    float output = speed_error * speed_p + speed_integrator * speed_i + speed_derivative * speed_d;
-
+    constexpr auto max_output = 12.0f;
+    if (output >  max_output) return  max_output;
+    if (output < -max_output) return -max_output;
     return output;
 }

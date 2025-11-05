@@ -59,6 +59,7 @@ void Foc::start() {
 
 
 Vector3 Foc::update(float current_a, float current_b, float current_c, float angle) {
+    debug_angle = angle;
     // Step 1: Clarke transform
     float i_alpha, i_beta;
     clarke_transform(current_a, current_b, current_c, i_alpha, i_beta);

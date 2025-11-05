@@ -194,14 +194,15 @@ inline void Motor::current_kirchhoff_reconstruct(float a, float b, float c) {
 //    current_b = -a - c;
 //    current_c = c;
 
-//   const float mean = (a + b + c) / 3.0f;
+//   const float mean = (a + b + c) / 3.0f / 3.0f;
 //   current_a = a - mean;
 //   current_b = b - mean;
 //   current_c = c - mean;
 
-     current_a = a;
-     current_b = -a - c;  // b is defect
-     current_c = c;
+    current_a = a;
+    current_b = b;
+//    current_b = -a - c;  // b is defect
+    current_c = c;
 }
 
 
@@ -250,6 +251,10 @@ void Motor::timer_isr() {
             run_current_control();
             break;
 
+        case Mode::speed_control:
+            run_speed_control();
+            break;
+
         case Mode::position_control:
             run_position_control();
             break;
@@ -260,12 +265,6 @@ void Motor::timer_isr() {
     }
     old_state = state;
 
-}
-
-
-void Motor::encoder_isr(int32_t angle_value) {
-    // angle is expressed as 0..4095 being 2 pi. that is motor shaft rotation and not pole rotation
-    encoder_value = angle_value;
 }
 
 
@@ -371,16 +370,30 @@ inline void Motor::run_current_control() {
 }
 
 
-inline void Motor::run_position_control() {
+inline void Motor::run_speed_control() {
     if (old_state != state) {
-        position.start(encoder_value);
+        speed.start(encoder_value);
         foc.set_id(0.0f);
     }
 
-    const float output = position.update(encoder_value);
+    const float output = speed.update(encoder_value);
     foc.set_iq(-output);
 
     run_current_control();
+}
+
+
+inline void Motor::run_position_control() {
+    if (old_state != state) {
+        position.start(encoder_value);
+        speed.start(encoder_value);
+        foc.set_id(0.0f);
+    }
+
+    const float out = position.update(encoder_value);
+    speed.set_target(out);
+
+    run_speed_control();
 }
 
 /**

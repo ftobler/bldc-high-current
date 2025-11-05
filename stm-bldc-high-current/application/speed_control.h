@@ -11,20 +11,24 @@
 #include "stdint.h"
 
 
-class Position {
+class Speed {
 private:
-    float position_p = 0.001f;
-    float position_i = 0.000f;
-    float position_d = 0.000f;
+    float speed_p = 1.8f;
+    float speed_i = 0.001f;
+    float speed_d = 0.000f;
 
-    float target_position = 0;
-    float old_error = 0;
+    float target_speed = 0;
+    int32_t prev_position = 0;
 
-    float position_integrator = 0.0f;
+    float speed_integrator = 0.0f;
+    float old_error = 0.0f;
+
+    float current_speed_filtered = 0.0f;
+
 public:
     void start(int32_t current_position);  // call to re-init control loop
-    void set_target(int32_t target) {
-        target_position = target;
+    void set_target(float target) {
+        target_speed = target;
     }
 
     /**
@@ -33,3 +37,4 @@ public:
      */
     float update(int32_t current_position);
 };
+

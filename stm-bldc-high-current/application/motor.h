@@ -10,6 +10,7 @@
 #include "stm32_hal.h"
 #include "calibration.h"
 #include "foc.h"
+#include "speed_control.h"
 #include "position_control.h"
 
 
@@ -31,7 +32,8 @@ private:
         calibration,      // static PWM stepping for encoder alignment
         power_control,    // sets angle automatic +90deg or -90deg
         current_control,  // inner FOC or current loop active
-        position_control  // positoin control on top of foc
+        speed_control,    // speed control on top of foc
+        position_control  // positoin control on top of speed
     };
     enum class StopReason {
         none,
@@ -79,6 +81,7 @@ private:
 
     Calibration calibration;
     Foc foc;
+    Speed speed;
     Position position;
 
     inline void assign_pwm(float power, float angle);
@@ -94,6 +97,7 @@ private:
     inline void run_calibration_step();
     inline void run_power_control();
     inline void run_current_control();
+    inline void run_speed_control();
     inline void run_position_control();
     inline void pwm_safe_assign(Vector3& v);
 public:
@@ -116,7 +120,10 @@ public:
      * it's time to re-calculate the currents from last ADC capture
      */
     void timer_isr();
-    void encoder_isr(int32_t angle_value);
+    void set_angle(int32_t angle_value) {
+        // angle is expressed as 0..4095 being 2 pi. that is motor shaft rotation and not pole rotation
+        encoder_value = angle_value;
+    }
 
     inline float get_supply_voltage() { return supply_voltage; }
     inline float get_current_a() { return current_a; }

@@ -35,6 +35,7 @@ private:
     // --- results (for debugging / visibility) ---
     float id = 0.0f;
     float iq = 0.0f;
+    float debug_angle = 0.0f;
 
     inline void clarke_transform(float a, float b, float c, float& alpha, float& beta);
     inline void inv_clarke_transform(float alpha, float beta, float& a, float& b, float& c);
