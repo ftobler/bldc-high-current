@@ -390,6 +390,7 @@ inline void Motor::run_position_control() {
         speedometer.start(encoder_value);
         speed.start();
         position.start();
+        position.set_target(encoder_value);
         foc.set_id(0.0f);
     }
 
