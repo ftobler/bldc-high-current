@@ -53,8 +53,10 @@ inline void Foc::inv_park_transform(float d, float q, float angle, float& alpha,
 
 
 void Foc::start() {
-    integrator_d = 0.0f;
-    integrator_q = 0.0f;
+//    integrator_d = 0.0f;
+//    integrator_q = 0.0f;
+    controller_d.start();
+    controller_q.start();
 }
 
 
@@ -68,21 +70,24 @@ Vector3 Foc::update(float current_a, float current_b, float current_c, float ang
     park_transform(i_alpha, i_beta, angle, id, iq);
 
     // Step 3: PI current control
-    const float err_d = target_id - id;
-    const float err_q = target_iq - iq;
+//    const float err_d = target_id - id;
+//    const float err_q = target_iq - iq;
 
-    integrator_d += err_d * ki_d;
-    integrator_q += err_q * ki_q;
+    const float v_d = controller_d.update(id);
+    const float v_q = controller_q.update(iq);
+
+//    integrator_d += err_d * ki_d;
+//    integrator_q += err_q * ki_q;
 
     // limit integrators to avoid windup
-    constexpr float integrator_limit = 1.0f;
-    if (integrator_d > integrator_limit) integrator_d = integrator_limit;
-    if (integrator_d < -integrator_limit) integrator_d = -integrator_limit;
-    if (integrator_q > integrator_limit) integrator_q = integrator_limit;
-    if (integrator_q < -integrator_limit) integrator_q = -integrator_limit;
+//    constexpr float integrator_limit = 1.0f;
+//    if (integrator_d > integrator_limit) integrator_d = integrator_limit;
+//    if (integrator_d < -integrator_limit) integrator_d = -integrator_limit;
+//    if (integrator_q > integrator_limit) integrator_q = integrator_limit;
+//    if (integrator_q < -integrator_limit) integrator_q = -integrator_limit;
 
-    const float v_d = kp_d * err_d + integrator_d;
-    const float v_q = kp_q * err_q + integrator_q;
+//    const float v_d = kp_d * err_d + integrator_d;
+//    const float v_q = kp_q * err_q + integrator_q;
 
     // Step 4: inverse Park transform
     float v_alpha, v_beta;

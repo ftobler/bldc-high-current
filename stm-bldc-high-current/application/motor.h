@@ -10,8 +10,10 @@
 #include "stm32_hal.h"
 #include "calibration.h"
 #include "foc.h"
-#include "speed_control.h"
-#include "position_control.h"
+//#include "speed_control.h"
+//#include "position_control.h"
+#include "controller.h"
+#include "speedometer.h"
 
 
  struct  __attribute__((packed)) Adc_dma {
@@ -81,8 +83,12 @@ private:
 
     Calibration calibration;
     Foc foc;
-    Speed speed;
-    Position position;
+    Speedometer speedometer;
+    Controller speed;
+    Controller position;
+
+//    Speed speed;
+//    Position position;
 
     inline void assign_pwm(float power, float angle);
     inline void assign_pwm_volt(float sa, float sb, float sc);
@@ -106,7 +112,10 @@ public:
             ADC_HandleTypeDef& adc
     ):
         timer(timer),
-        adc(adc) {};
+        adc(adc),
+        speedometer(1/24000.0f),
+        speed(4.0f, 80.0f, 0.9999f, 25.0f, -25.0f, 1/24000.0f),
+        position(0.0075f, 0.002, 0.9999f, +10.0f, -10.0f, 1/24000.0f) {};
 
     /**
      * called once at startup

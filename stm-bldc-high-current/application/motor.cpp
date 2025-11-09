@@ -372,11 +372,13 @@ inline void Motor::run_current_control() {
 
 inline void Motor::run_speed_control() {
     if (old_state != state) {
-        speed.start(encoder_value);
+        speedometer.start(encoder_value);
+        speed.start();
         foc.set_id(0.0f);
     }
 
-    const float output = speed.update(encoder_value);
+    const float speed_value = speedometer.update(encoder_value);
+    const float output = speed.update(speed_value);
     foc.set_iq(-output);
 
     run_current_control();
@@ -385,8 +387,9 @@ inline void Motor::run_speed_control() {
 
 inline void Motor::run_position_control() {
     if (old_state != state) {
-        position.start(encoder_value);
-        speed.start(encoder_value);
+        speedometer.start(encoder_value);
+        speed.start();
+        position.start();
         foc.set_id(0.0f);
     }
 
@@ -413,7 +416,8 @@ inline void Motor::pwm_safe_assign(Vector3& v) {
         return outbound(a, max) || outbound(b, max) || outbound(c, max);
     };
 
-    const bool pwm_out_of_bound = outbound3(v.a, v.b, v.c, max_pwm);
+//    const bool pwm_out_of_bound = outbound3(v.a, v.b, v.c, max_pwm);
+    constexpr bool pwm_out_of_bound = false;
     const bool current_out_of_bound = outbound3(current_a_tpfilter, current_b_tpfilter, current_c_tpfilter, max_current);
 
     if (pwm_out_of_bound || current_out_of_bound) {
