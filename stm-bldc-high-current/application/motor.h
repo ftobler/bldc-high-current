@@ -122,8 +122,8 @@ public:
         speedometer(update_time),
         speed(4.0f, 100.0f, 1.0f, 35.0f, -35.0f, update_time),
         // position(0.0075f, 0.000, 1.0f, +15.0f, -15.0f, update_time) {};
-        position(0.002f, 0.000, 1.0f, +15.0f, -15.0f, update_time),
-        shaper(4.0f) {};
+        position(0.0075f, 0.0f, 0.0f, +20.0f, -20.0f, update_time),
+        shaper(1.5f) {};  // practical max is 2.5
 
     /**
      * called once at startup
