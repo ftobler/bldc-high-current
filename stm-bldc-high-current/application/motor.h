@@ -14,6 +14,7 @@
 //#include "position_control.h"
 #include "controller.h"
 #include "speedometer.h"
+#include "shaper.h"
 
 
  struct  __attribute__((packed)) Adc_dma {
@@ -29,13 +30,14 @@ static_assert(sizeof(Adc_dma) == 8);  // if false, compiler is set up wrong
 class Motor {
 private:
     enum class Mode : uint8_t {
-        off,              // safe off
-        manual,           // direct set of angle/power from user or debug
-        calibration,      // static PWM stepping for encoder alignment
-        power_control,    // sets angle automatic +90deg or -90deg
-        current_control,  // inner FOC or current loop active
-        speed_control,    // speed control on top of foc
-        position_control  // positoin control on top of speed
+        off,               // safe off
+        manual,            // direct set of angle/power from user or debug
+        calibration,       // static PWM stepping for encoder alignment
+        power_control,     // sets angle automatic +90deg or -90deg
+        current_control,   // inner FOC or current loop active
+        speed_control,     // speed control on top of foc
+        position_control,  // positoin control on top of speed
+        shaped_position    // positoin control with slope limit
     };
     enum class StopReason {
         none,
@@ -86,6 +88,7 @@ private:
     Speedometer speedometer;
     Controller speed;
     Controller position;
+    Shaper shaper;
 
 //    Speed speed;
 //    Position position;
@@ -105,7 +108,10 @@ private:
     inline void run_current_control();
     inline void run_speed_control();
     inline void run_position_control();
+    inline void run_position_shaped_control();
     inline void pwm_safe_assign(Vector3& v);
+
+    static constexpr float update_time = 1 / 24000.0f;
 public:
     Motor(
             TIM_HandleTypeDef& timer,
@@ -113,9 +119,11 @@ public:
     ):
         timer(timer),
         adc(adc),
-        speedometer(1/24000.0f),
-        speed(4.0f, 80.0f, 0.9999f, 25.0f, -25.0f, 1/24000.0f),
-        position(0.0075f, 0.002, 0.9999f, +10.0f, -10.0f, 1/24000.0f) {};
+        speedometer(update_time),
+        speed(4.0f, 100.0f, 1.0f, 35.0f, -35.0f, update_time),
+        // position(0.0075f, 0.000, 1.0f, +15.0f, -15.0f, update_time) {};
+        position(0.002f, 0.000, 1.0f, +15.0f, -15.0f, update_time),
+        shaper(4.0f) {};
 
     /**
      * called once at startup

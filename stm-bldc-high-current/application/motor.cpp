@@ -259,6 +259,10 @@ void Motor::timer_isr() {
             run_position_control();
             break;
 
+        case Mode::shaped_position:
+            run_position_shaped_control();
+            break;
+
         default:
             state = Mode::off;
             stop_reason = StopReason::none;
@@ -400,13 +404,23 @@ inline void Motor::run_position_control() {
     run_speed_control();
 }
 
+
+inline void Motor::run_position_shaped_control() {
+    if (old_state != state) {
+        shaper.start();
+    }
+    const float position_target = shaper.update();
+    position.set_target(position_target);
+    run_position_control();
+}
+
 /**
  * apply pwm voltages with safe emergency stop conditions
  */
 inline void Motor::pwm_safe_assign(Vector3& v) {
     // lambda helper for safety limits
     constexpr float max_current = 50.0f;
-    constexpr float max_pwm = 0.95f;
+//    constexpr float max_pwm = 0.95f;
 
     // lambda helper for single value out of bounds
     auto outbound = [&](float x, float max) -> bool {

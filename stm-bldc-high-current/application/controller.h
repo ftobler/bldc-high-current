@@ -39,7 +39,7 @@ public:
                float out_max = 1.0f,
                float out_min = 0.0f,
                float sample_time = 0.001f);
-        void start();
+    void start();
     float update(float measurement);
     void set_target(float new_target) { target = new_target; }
 };

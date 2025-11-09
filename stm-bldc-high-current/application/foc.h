@@ -47,8 +47,8 @@ private:
     inline void park_transform(float alpha, float beta, float angle, float& d, float& q);
     inline void inv_park_transform(float d, float q, float angle, float& alpha, float& beta);
 public:
-    Foc(): controller_d(0.04f, 24.0f, 0.9999f, 40.0f, -40.0f, 1/24000.0f),
-           controller_q(0.04f, 24.0f, 0.9999f, 40.0f, -40.0f, 1/24000.0f) {};
+    Foc(): controller_d(0.04f/2, 24.0f, 0.9999f, 40.0f, -40.0f, 1/24000.0f),
+           controller_q(0.04f/2, 24.0f, 0.9999f, 40.0f, -40.0f, 1/24000.0f) {};
     void start();
     Vector3 update(float current_a, float current_b, float current_c, float angle);
     void set_id(float new_id) { controller_d.set_target(new_id); }
