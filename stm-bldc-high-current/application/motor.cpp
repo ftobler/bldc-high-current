@@ -430,7 +430,7 @@ inline void Motor::run_lqi_control() {
     const float speed_value = speedometer.update(encoder_value);
     lqi.set_position(shaper.get_position());
     lqi.set_speed(shaper.get_speed());
-    const float output = lqi.update(encoder_value / 4096.0f, speed_value);
+    const float output = lqi.update_PoM(encoder_value / 4096.0f, speed_value);
     foc.set_iq(output);
 
     run_current_control();

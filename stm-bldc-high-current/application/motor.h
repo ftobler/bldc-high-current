@@ -128,7 +128,8 @@ public:
         speed(4.0f, 100.0f, 1.0f, 35.0f, -35.0f, update_time),
         position(30.0f, 0.0f, 0.0f, +20.0f, -20.0f, update_time),
         shaper(12.0f, 100.0f, update_time),  // practical max is 2.5*240000
-        lqi(100.0f, 5.0f, 5000.0f, update_time, 35.0f) {};
+//        lqi(100.0f, 5.0f, 5000.0f, update_time, 35.0f) {};  // for PoE
+        lqi(150.0f, 5.0f, 8000.0f, update_time, 35.0f) {};  // for PoM
 
     /**
      * called once at startup

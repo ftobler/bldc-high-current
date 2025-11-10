@@ -49,12 +49,13 @@ public:
     void reset();
 
 
-    float update(float act_position, float act_speed);
+    float update_PoE(float act_position, float act_speed);
+    float update_PoM(float act_position, float act_speed);
 
     /**
      * Sets the position setpoint (theta_ref).
      */
-    void set_position(float position) { target_position = position; };  // FIX: Used 'position'
+    void set_position(float position) { target_position = position; };
 
     /**
      * Sets the speed setpoint (omega_ref).
