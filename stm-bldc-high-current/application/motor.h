@@ -15,6 +15,7 @@
 #include "controller.h"
 #include "speedometer.h"
 #include "shaper.h"
+#include "lqi.h"
 
 
  struct  __attribute__((packed)) Adc_dma {
@@ -37,7 +38,8 @@ private:
         current_control,   // inner FOC or current loop active
         speed_control,     // speed control on top of foc
         position_control,  // positoin control on top of speed
-        shaped_position    // positoin control with slope limit
+        shaped_position,   // positoin control with slope limit
+        lqi_position       // LQI (Linear Quadratic Integrator)
     };
     enum class StopReason {
         none,
@@ -89,6 +91,7 @@ private:
     Controller speed;
     Controller position;
     Shaper shaper;
+    LqiController lqi;
 
 //    Speed speed;
 //    Position position;
@@ -109,6 +112,7 @@ private:
     inline void run_speed_control();
     inline void run_position_control();
     inline void run_position_shaped_control();
+    inline void run_lqi_control();
     inline void pwm_safe_assign(Vector3& v);
 
     static constexpr float update_time = 1 / 24000.0f;
@@ -120,10 +124,11 @@ public:
         timer(timer),
         adc(adc),
         speedometer(update_time),
-        speed(4.0f, 100.0f, 1.0f, 35.0f, -35.0f, update_time),
         // position(0.0075f, 0.000, 1.0f, +15.0f, -15.0f, update_time) {};
-        position(0.0075f, 0.0f, 0.0f, +20.0f, -20.0f, update_time),
-        shaper(1.5f) {};  // practical max is 2.5
+        speed(4.0f, 100.0f, 1.0f, 35.0f, -35.0f, update_time),
+        position(30.0f, 0.0f, 0.0f, +20.0f, -20.0f, update_time),
+        shaper(15.0f, update_time),  // practical max is 2.5*240000
+        lqi(200.0f, 5.0f, 0.01f, update_time, 35.0f) {};
 
     /**
      * called once at startup

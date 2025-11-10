@@ -263,6 +263,10 @@ void Motor::timer_isr() {
             run_position_shaped_control();
             break;
 
+        case Mode::lqi_position:
+            run_lqi_control();
+            break;
+
         default:
             state = Mode::off;
             stop_reason = StopReason::none;
@@ -394,11 +398,11 @@ inline void Motor::run_position_control() {
         speedometer.start(encoder_value);
         speed.start();
         position.start();
-        position.set_target(encoder_value);
+        position.set_target(encoder_value / 4096.0f);
         foc.set_id(0.0f);
     }
 
-    const float out = position.update(encoder_value);
+    const float out = position.update(encoder_value / 4096.0f);
     speed.set_target(out);
 
     run_speed_control();
@@ -407,12 +411,31 @@ inline void Motor::run_position_control() {
 
 inline void Motor::run_position_shaped_control() {
     if (old_state != state) {
-        shaper.start();
+        shaper.start(encoder_value / 4096.0f);
     }
-    const float position_target = shaper.update();
-    position.set_target(position_target);
+    shaper.update();
+    position.set_target(shaper.get_position());
     run_position_control();
 }
+
+
+inline void Motor::run_lqi_control() {
+    if (old_state != state) {
+        shaper.start(encoder_value / 4096.0f);
+        speedometer.start(encoder_value);
+        foc.set_id(0.0f);
+        lqi.reset();
+    }
+    shaper.update();
+    const float speed_value = speedometer.update(encoder_value);
+    lqi.set_position(shaper.get_position());
+    lqi.set_speed(shaper.get_speed());
+    const float output = lqi.update(encoder_value / 4096.0f, speed_value);
+    foc.set_iq(output);
+
+    run_current_control();
+}
+
 
 /**
  * apply pwm voltages with safe emergency stop conditions
