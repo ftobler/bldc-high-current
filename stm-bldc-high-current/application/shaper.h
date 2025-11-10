@@ -15,35 +15,37 @@
 class Shaper {
 private:
     const float DT;         // Control loop time step (seconds)
-    float max_delta;        // Maximum position change per update cycle (units/DT)
+    float max_velocity;     // Max velocity (modifiable at runtime)
+    float max_accel;        // Max acceleration (rad/s^2)
     float target = 0.0f;    // The user's final desired target position
     float current_position = 0.0f;  // The smoothed current setpoint position (theta_ref)
     float current_speed = 0.0f;  // The calculated instantaneous speed (omega_ref)
 
-    static inline float abs(float a) {
-        if (a > 0) {
-            return a;
-        }
-        return -a;
+    static inline float absf(float x) { return (x >= 0.0f) ? x : -x; }
+    static inline float sgn(float x) { return (x > 0.0f) - (x < 0.0f); }
+    static inline float clampf(float v, float lo, float hi) {
+        if (v < lo) return lo;
+        if (v > hi) return hi;
+        return v;
     }
 
 public:
     /**
      * Constructor for the Shaper.
-     * max_velocity Maximum allowable velocity (rad/s)
+     * max_velocity Maximum allowable velocity (1/s)
      * dt The control loop time step (seconds)
      */
-    Shaper(float max_velocity, float dt) : DT(dt) {
-        // max_delta = max_velocity * dt
-        // This is the max distance the position can move in one time step
-        max_delta = max_velocity * DT;
-    };
+    Shaper(float max_velocity, float max_accel, float dt)
+        : DT(dt), max_velocity(max_velocity), max_accel(max_accel) {}
 
     /**
      * Sets the final target position for the trajectory.
      * new_target The user's desired final position (radians)
      */
     void set_target(float new_target) { target = new_target; }
+
+    void set_max_velocity(float v) { max_velocity = v; }
+    void set_max_accel(float a) { max_accel = a; }
 
     /**
      * Resets the shaper to start smoothing from the current position.
